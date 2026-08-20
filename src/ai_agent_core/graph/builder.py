@@ -1,13 +1,17 @@
 import traceback
 from functools import partial
 from langgraph.graph import StateGraph, END, Graph
+from langgraph.checkpoint.memory import MemorySaver
 from src.ai_agent_core.schemas.state import AgentState
 
 
 class AgentGraphBuilder:
     def __init__(self, app_state):
         self.logger = app_state.logger
-        self.model = app_state.model
+        self.llm = app_state.llm
+
+        self.checkpointer = MemorySaver()
+        self.agent = self._build_graph()
 
 
     def set_initial_state(self, query: str, session_id: str) -> AgentState:
@@ -37,10 +41,20 @@ class AgentGraphBuilder:
         workflow = StateGraph(AgentState)
 
 
-        return workflow.compile()
+        return workflow.compile(
+            checkpointer=self.checkpointer,
+        )
 
 
     def run(self, query: str, session_id: str) -> dict:
         initial_state = self.set_initial_state(query, session_id)
+        config = {
+            "configurable": {
+                "thread_id": session_id,
+            }
+        }
 
-        return self.agent.invoke(initial_state=initial_state)
+        return self.agent.invoke(
+            initial_state=initial_state,
+            config=config
+            )
