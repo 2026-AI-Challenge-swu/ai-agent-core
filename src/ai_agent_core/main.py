@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     app.state.config.OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
     app.state.logger = setup_logger()
     app.state.llm = GPT(app.state)
-    # app.state.model = load_model()
+    # app.state.agent = load_model()
     # app.state.db = await connect_db()
 
     yield
@@ -48,6 +48,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(api_router)
 
 
 if __name__ == "__main__":
