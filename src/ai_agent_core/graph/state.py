@@ -10,6 +10,7 @@ class AgentState(TypedDict):
 
     messages: Annotated[list[BaseMessage], add_messages]
 
+    sub_tasks: list[str]
     plan: str | None
     tool_results: list[dict]
 
