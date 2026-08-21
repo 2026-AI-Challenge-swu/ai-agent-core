@@ -44,6 +44,9 @@ class AgentGraphBuilder:
         query: str,
         session_id: str,
     ) -> AgentState:
+        """
+        graph invoke 전 state 초기화
+        """
 
         return AgentState(
             query=query,
@@ -60,7 +63,9 @@ class AgentGraphBuilder:
     # =========================================================
 
     def _with_error_logging(self, node_name, func):
-
+        """
+        어떤 노드 작업 진행중인지, 어디에서 에러 났는지 확인
+        """
         def wrapper(state):
 
             try:
@@ -93,9 +98,11 @@ class AgentGraphBuilder:
     # =========================================================
     # Worker Graph
     # =========================================================
-
     def _build_worker_graph(self):
-
+        """
+        서브 graph(병렬 처리용) 빌드
+        노드 엣지 연결
+        """
         workflow = StateGraph(WorkerState)
 
         workflow.add_node(
@@ -153,7 +160,10 @@ class AgentGraphBuilder:
         self,
         state: AgentState,
     ):
-
+        """
+        decomposer -> 서브 graph 연결고리
+        (서브 graph용 state init하는 부분)
+        """
         sub_queries = state.get(
             "sub_queries",
             [],
@@ -184,7 +194,9 @@ class AgentGraphBuilder:
         self,
         state: AgentState,
     ) -> str:
-
+        """
+        퀄리티 확인 분기 루트
+        """
         score = state.get(
             "quality_score",
             0.0,
@@ -207,40 +219,14 @@ class AgentGraphBuilder:
         return "retry_workers"
 
     # =========================================================
-    # Retry Fan-out
-    # =========================================================
-
-    def _retry_workers(
-        self,
-        state: AgentState,
-    ):
-
-        sub_queries = state.get(
-            "sub_queries",
-            [],
-        )
-
-        self.logger.info(
-            f"[RETRY] {len(sub_queries)} workers"
-        )
-
-        return [
-            Send(
-                "worker",
-                {
-                    "sub_query": item["sub_query"],
-                    "sub_query_id": item["sub_query_id"],
-                },
-            )
-            for item in sub_queries
-        ]
-
-    # =========================================================
     # Main Graph
     # =========================================================
 
     def _build_graph(self):
-
+        """
+        메인 graph 빌드
+        노드 엣지 연결
+        """
         workflow = StateGraph(AgentState)
 
         # -----------------------------------------------------

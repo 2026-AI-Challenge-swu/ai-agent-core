@@ -3,6 +3,9 @@ import operator
 
 
 class AgentState(TypedDict, total=False):
+    """
+    Main State
+    """
     session_id: str
     query: str
 
@@ -17,6 +20,9 @@ class AgentState(TypedDict, total=False):
 
 
 class WorkerState(TypedDict, total=False):
+    """
+    decomposer 이후 병렬 처리되는 worker state
+    """
     sub_query: str
     intent: str
 
