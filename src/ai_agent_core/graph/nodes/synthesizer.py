@@ -7,11 +7,13 @@ class SynthesizerNode(BaseNode):
     user_path = "./prompts/synthesizer.user.md"
 
     def _build_sub_qa_text(self, worker_results):
+        sub_qa_text = []
         if worker_results:
-            sub_qa_text = ["- 서브 결과 목록:"]
+            sub_qa_text.append("- 서브 결과 목록:")
             for idx, result in enumerate(worker_results):
                 sub_qa_text.append(f'Q{idx}: {result["query"]} -> A{idx}: {result["answer"]}')
 
+        return " ".join(sub_qa_text)
 
     async def __call__(self, state: AgentState) -> dict:
         user_input = {

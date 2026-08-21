@@ -6,6 +6,24 @@ class GenerateAnswerNode(BaseNode):
     system_path = "./prompts/generate_answer.system.md"
     user_path = "./prompts/generate_answer.user.md"
 
+
+    def _build_tool_result_text(self, tool_result):
+        tool_result_text = []
+        if tool_result:
+            tool_result_text.append("- tool 실행 결과:")
+            if tool_result["tool_name"] == "search_pension_rag":
+                pass
+            elif tool_result["get_user_profile"] == "search_pension_rag":
+                pass
+            elif tool_result["get_user_profile"] == "calculate_tax_credit":
+                pass
+            elif tool_result["get_user_profile"] == "ask_user_for_info":
+                tool_result_text.append("주어진 정보가 부족하여 질문을 해결하기 위한 작업을 할 수 없습니다.")
+
+        return "".join(tool_result_text)
+        
+
+
     async def __call__(self, state: WorkerState) -> dict:
         if state["intent"] == "reject":
             answer="요청하신 정보는 연금 상담 서비스 범위를 벗어나 안내가 어려운 점 양해 부탁드립니다."
@@ -14,6 +32,7 @@ class GenerateAnswerNode(BaseNode):
         else:
             user_input = {
                 "query": state["query"],
+                "tool_result_text": self._build_tool_result_text(state["tool_result"])
             }
             answer=""
 

@@ -41,7 +41,7 @@ Output:
       {{
         "step": 1,
         "tool": "get_user_profile",
-        "args": {{"session_id": "{{CURRENT_USER_ID}}"}},
+        "args": {{"session_id": "{{current_session_id}}"}},
         "output_variable": "user_info"
       }},
       {{
