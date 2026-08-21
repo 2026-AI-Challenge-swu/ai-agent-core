@@ -1,10 +1,10 @@
 import traceback
-from functools import partial
 
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.types import Send
 
-from src.ai_agent_core.graph.state import AgentState
+from src.ai_agent_core.graph.state import AgentState, WorkerState
 
 from src.ai_agent_core.graph.nodes.decomposer import DecomposerNode
 from src.ai_agent_core.graph.nodes.planner import PlannerNode
@@ -15,10 +15,11 @@ from src.ai_agent_core.graph.nodes.generate_answer import GenerateAnswerNode
 
 
 class AgentGraphBuilder:
+
     def __init__(self, app_state):
         self.logger = app_state.logger
 
-        # 노드 클래스 초기화
+        # Nodes
         self.decomposer = DecomposerNode(app_state)
         self.planner = PlannerNode(app_state)
         self.tool_call = ToolCallNode(app_state)
@@ -27,69 +28,76 @@ class AgentGraphBuilder:
         self.synthesizer = SynthesizerNode(app_state)
 
         self.checkpointer = MemorySaver()
+
+        # Worker graph
+        self.worker = self._build_worker_graph()
+
+        # Main graph
         self.agent = self._build_graph()
 
+    # =========================================================
+    # Initial State
+    # =========================================================
 
-    def _set_initial_state(self, query: str, session_id: str) -> AgentState:
-        """
-        AgentState 초기화 함수
-        """
+    def _set_initial_state(
+        self,
+        query: str,
+        session_id: str,
+    ) -> AgentState:
+
         return AgentState(
             query=query,
             session_id=session_id,
+            sub_queries=[],
+            worker_results=[],
+            quality_score=0.0,
+            quality_feedback="",
+            final_answer="",
         )
 
-
-    def _route_quality(self, state: AgentState) -> str:
-        """
-        답변 평가 분기 함수
-        """
-
-        score = state["quality_score"]
-        feedback = state["quality_feedback"]
-
-        if score >= 0.8:
-            return "synthesizer"
-
-        if "근거" in feedback or "정보 부족" in feedback:
-            return "retry_plan"
-
-        return "retry_answer"
-
+    # =========================================================
+    # Error Logging
+    # =========================================================
 
     def _with_error_logging(self, node_name, func):
-        """
-        노드 진행상황 확인 + 에러 확인용 로그 래퍼 
-        """
+
         def wrapper(state):
+
             try:
-                self.logger.info(f"[START] {node_name}")
+                self.logger.info(
+                    f"[START] {node_name}"
+                )
+
                 result = func(state)
-                self.logger.info(f"[END] {node_name}")
+
+                self.logger.info(
+                    f"[END] {node_name}"
+                )
+
                 return result
 
-            except Exception as e:
-                self.logger.exception(f"[ERROR] Node '{node_name}' failed")
-                self.logger.error(traceback.format_exc())
+            except Exception:
+
+                self.logger.exception(
+                    f"[ERROR] Node '{node_name}' failed"
+                )
+
+                self.logger.error(
+                    traceback.format_exc()
+                )
+
                 raise
 
         return wrapper
 
+    # =========================================================
+    # Worker Graph
+    # =========================================================
 
-    def _build_graph(self) -> StateGraph:
-        """
-        LangGraph 빌드(주요 함수는 /node 에서 정의)
-        """
-        workflow = StateGraph(AgentState)
+    def _build_worker_graph(self):
 
-        workflow.add_node(
-            "decomposer",
-            self._with_error_logging(
-                "decomposer",
-                self.decomposer,
-            ),
-        )
-        
+        workflow = StateGraph(WorkerState)
+
         workflow.add_node(
             "planner",
             self._with_error_logging(
@@ -114,6 +122,143 @@ class AgentGraphBuilder:
             ),
         )
 
+        # planner
+        workflow.set_entry_point("planner")
+
+        # planner → tool
+        workflow.add_edge(
+            "planner",
+            "tool_call",
+        )
+
+        # tool → answer
+        workflow.add_edge(
+            "tool_call",
+            "generate_answer",
+        )
+
+        # answer → END
+        workflow.add_edge(
+            "generate_answer",
+            END,
+        )
+
+        return workflow.compile()
+
+    # =========================================================
+    # Fan-out
+    # =========================================================
+
+    def _fanout_workers(
+        self,
+        state: AgentState,
+    ):
+
+        sub_queries = state.get(
+            "sub_queries",
+            [],
+        )
+
+        self.logger.info(
+            f"[FANOUT] {len(sub_queries)} workers"
+        )
+
+        return [
+            Send(
+                "worker",
+                {
+                    "sub_query": item["sub_query"],
+                    "sub_query_id": item["sub_query_id"],
+                    "worker_results": [],
+                },
+            )
+            for item in sub_queries
+        ]
+
+    # =========================================================
+    # Quality Routing
+    # =========================================================
+
+    def _route_quality(
+        self,
+        state: AgentState,
+    ) -> str:
+
+        score = state.get(
+            "quality_score",
+            0.0,
+        )
+
+        feedback = state.get(
+            "quality_feedback",
+            "",
+        )
+
+        if score >= 0.8:
+            return "synthesizer"
+
+        if (
+            "근거" in feedback
+            or "정보 부족" in feedback
+        ):
+            return "retry_workers"
+
+        return "retry_workers"
+
+    # =========================================================
+    # Retry Fan-out
+    # =========================================================
+
+    def _retry_workers(
+        self,
+        state: AgentState,
+    ):
+
+        sub_queries = state.get(
+            "sub_queries",
+            [],
+        )
+
+        self.logger.info(
+            f"[RETRY] {len(sub_queries)} workers"
+        )
+
+        return [
+            Send(
+                "worker",
+                {
+                    "sub_query": item["sub_query"],
+                    "sub_query_id": item["sub_query_id"],
+                },
+            )
+            for item in sub_queries
+        ]
+
+    # =========================================================
+    # Main Graph
+    # =========================================================
+
+    def _build_graph(self):
+
+        workflow = StateGraph(AgentState)
+
+        # -----------------------------------------------------
+        # Nodes
+        # -----------------------------------------------------
+
+        workflow.add_node(
+            "decomposer",
+            self._with_error_logging(
+                "decomposer",
+                self.decomposer,
+            ),
+        )
+
+        workflow.add_node(
+            "worker",
+            self.worker,
+        )
+
         workflow.add_node(
             "quality_check",
             self._with_error_logging(
@@ -130,35 +275,73 @@ class AgentGraphBuilder:
             ),
         )
 
+        # -----------------------------------------------------
+        # Entry
+        # -----------------------------------------------------
 
-        workflow.set_entry_point("decomposer")
-        workflow.add_edge("decomposer","planner")
-        workflow.add_edge("planner","tool_call")
-        workflow.add_edge("tool_call","generate_answer")
-        workflow.add_edge("generate_answer","quality_check")
-        workflow.add_edge("quality_check","synthesizer")
-        workflow.add_edge("synthesizer", END)
+        workflow.set_entry_point(
+            "decomposer"
+        )
 
+        # -----------------------------------------------------
+        # Decomposer → Parallel Workers
+        # -----------------------------------------------------
+
+        workflow.add_conditional_edges(
+            "decomposer",
+            self._fanout_workers,
+        )
+
+        # -----------------------------------------------------
+        # Worker → Quality Check
+        # -----------------------------------------------------
+
+        workflow.add_edge(
+            "worker",
+            "quality_check",
+        )
+
+        # -----------------------------------------------------
+        # Quality Check → ...
+        # -----------------------------------------------------
 
         workflow.add_conditional_edges(
             "quality_check",
             self._route_quality,
             {
                 "synthesizer": "synthesizer",
-                "retry_plan": "planner",
-                "retry_answer": "generate_answer",
+                "retry_workers": "worker",
             },
         )
 
+        # -----------------------------------------------------
+        # Synthesizer → END
+        # -----------------------------------------------------
+
+        workflow.add_edge(
+            "synthesizer",
+            END,
+        )
 
         return workflow.compile(
             checkpointer=self.checkpointer,
         )
 
+    # =========================================================
+    # Public
+    # =========================================================
 
-    # public method
-    def run(self, query: str, session_id: str) -> dict:
-        initial_state = self._set_initial_state(query, session_id)
+    def run(
+        self,
+        query: str,
+        session_id: str,
+    ) -> dict:
+
+        initial_state = self._set_initial_state(
+            query=query,
+            session_id=session_id,
+        )
+
         config = {
             "configurable": {
                 "thread_id": session_id,
@@ -167,5 +350,5 @@ class AgentGraphBuilder:
 
         return self.agent.invoke(
             input=initial_state,
-            config=config
-            )
+            config=config,
+        )

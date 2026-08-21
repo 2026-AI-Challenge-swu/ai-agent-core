@@ -1,22 +1,34 @@
-from typing import Annotated, Literal
-from typing_extensions import TypedDict
-from langchain_core.messages import BaseMessage
-from langgraph.graph.message import add_messages
+from typing import Annotated, TypedDict
+import operator
 
 
-class AgentState(TypedDict):
+class AgentState(TypedDict, total=False):
     session_id: str
     query: str
 
-    messages: Annotated[list[BaseMessage], add_messages]
+    sub_queries: list[dict]
 
-    sub_tasks: list[str]
-    plan: str | None
-    tool_results: list[dict]
-
-    answer: str | None
+    worker_results: Annotated[list[dict], operator.add]
 
     quality_score: float | None
     quality_feedback: str | None
 
-    retry_count: int
+    final_answer: str | None
+
+
+class WorkerState(TypedDict, total=False):
+    # 하나의 세부 질문
+    sub_query: str
+
+    # 몇 번째 sub-query인지
+    sub_query_id: int
+    # planner 결과
+    plan: dict
+    # tool 실행 결과
+    tool_result: dict
+
+    # 생성된 답변
+    answer: str
+
+    # 최종 worker 결과
+    worker_results: Annotated[list, operator.add]

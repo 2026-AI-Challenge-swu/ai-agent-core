@@ -8,4 +8,6 @@ class SynthesizerNode(BaseNode):
 
     
     def __call__(self, state: AgentState) -> dict:
-        pass 
+        final_answer = ""
+
+        return final_answer 

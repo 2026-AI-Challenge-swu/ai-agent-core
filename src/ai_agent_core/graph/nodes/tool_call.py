@@ -13,5 +13,5 @@ class ToolCallNode(BaseNode):
         tool_results = []
 
         return {
-            "tool_results": [],
+            "tool_results": {},
         }

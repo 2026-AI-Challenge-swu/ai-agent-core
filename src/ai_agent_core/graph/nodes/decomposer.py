@@ -12,5 +12,5 @@ class DecomposerNode(BaseNode):
 
 
         return {
-            "sub_tasks": [],
+            "sub_queries": [{"sub_query_id": idx, "sub_query": i}for idx, i in enumerate(query.split(","))],
         }
