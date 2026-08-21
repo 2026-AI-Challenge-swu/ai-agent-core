@@ -6,10 +6,17 @@ class SynthesizerNode(BaseNode):
     system_path = "./prompts/synthesizer.system.md"
     user_path = "./prompts/synthesizer.user.md"
 
-    
+    def _build_sub_qa_text(self, worker_results):
+        if worker_results:
+            sub_qa_text = ["- 서브 결과 목록:"]
+            for idx, result in enumerate(worker_results):
+                sub_qa_text.append(f'Q{idx}: {result["query"]} -> A{idx}: {result["answer"]}')
+
+
     async def __call__(self, state: AgentState) -> dict:
         user_input = {
-            "query": state["query"]
+            "query": state["query"],
+            "sub_qa_text": self._build_sub_qa_text(state["worker_results"])
         }
 
         system_prompt = self.llm.get_prompt(self.system_path)
@@ -18,10 +25,21 @@ class SynthesizerNode(BaseNode):
         input = {
             "system_prompt": system_prompt,
             "user_prompt": user_prompt,
+            "max_output_tokens": 2048
         }
 
+        def validate_format(result):
+            if result:
+                return True
+            
+            return False
+
         
-        final_answer = "얍!"
+        final_answer = self._retry_invoke(
+            input=input,
+            execute_fn=lambda kwargs: self.llm.call_gpt(**kwargs),
+            valid_fn=validate_format
+        )
 
         return {
             "final_answer" : final_answer

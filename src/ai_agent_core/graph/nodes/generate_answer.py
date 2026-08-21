@@ -7,7 +7,15 @@ class GenerateAnswerNode(BaseNode):
     user_path = "./prompts/generate_answer.user.md"
 
     async def __call__(self, state: WorkerState) -> dict:
-        answer=""
+        if state["intent"] == "reject":
+            answer="요청하신 정보는 연금 상담 서비스 범위를 벗어나 안내가 어려운 점 양해 부탁드립니다."
+
+
+        else:
+            user_input = {
+                "query": state["query"],
+            }
+            answer=""
 
 
         return {
