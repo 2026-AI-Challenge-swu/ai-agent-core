@@ -9,8 +9,6 @@ class DecomposerNode(BaseNode):
 
 
     def __call__(self, state: AgentState) -> dict:
-        query = state["query"]
-
         user_input = {
             "query": state["query"]
         }
