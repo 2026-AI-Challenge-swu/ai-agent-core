@@ -6,7 +6,7 @@ class GenerateAnswerNode(BaseNode):
     system_path = "./prompts/generate_answer.system.md"
     user_path = "./prompts/generate_answer.user.md"
 
-    def __call__(self, state: WorkerState) -> dict:
+    async def __call__(self, state: WorkerState) -> dict:
         answer=""
 
 

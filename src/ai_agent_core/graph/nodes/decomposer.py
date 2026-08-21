@@ -8,7 +8,7 @@ class DecomposerNode(BaseNode):
     user_path = "./prompts/decomposer.user.md"
 
 
-    def __call__(self, state: AgentState) -> dict:
+    async def __call__(self, state: AgentState) -> dict:
         user_input = {
             "query": state["query"]
         }

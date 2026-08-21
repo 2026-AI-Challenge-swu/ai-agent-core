@@ -1,4 +1,5 @@
 import traceback
+from typing import AsyncGenerator, Dict, Any
 
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
@@ -66,14 +67,14 @@ class AgentGraphBuilder:
         """
         어떤 노드 작업 진행중인지, 어디에서 에러 났는지 확인
         """
-        def wrapper(state):
+        async def wrapper(state):
 
             try:
                 self.logger.info(
                     f"[START] {node_name}"
                 )
 
-                result = func(state)
+                result = await func(state)
 
                 self.logger.info(
                     f"[END] {node_name}"
@@ -318,7 +319,7 @@ class AgentGraphBuilder:
     # Public
     # =========================================================
 
-    def run(
+    async def run(
         self,
         query: str,
         session_id: str,
@@ -335,7 +336,82 @@ class AgentGraphBuilder:
             }
         }
 
-        return self.agent.invoke(
+        return await self.agent.ainvoke(
             input=initial_state,
             config=config,
         )
+
+
+    async def stream_run(
+        self,
+        query: str,
+        session_id: str,
+    ) -> AsyncGenerator[Dict[str, Any], None]:
+        """
+        SSE 전송을 위한 비동기 제너레이터
+        LangGraph 노드 진입/종료 이벤트를 감지하여 yield 수행
+        """
+        initial_state = self._set_initial_state(
+            query=query,
+            session_id=session_id,
+        )
+
+        config = {
+            "configurable": {
+                "thread_id": session_id,
+            }
+        }
+
+        # 감지 및 메시지를 지정할 노드 목록
+        target_nodes = {
+            "decomposer": "질문 분석 및 작업 분할 중입니다.",
+            "planner": "하위 작업 계획 수립 중입니다.",
+            "tool_call": "외부 도구/검색을 수행하고 있습니다.",
+            "generate_answer": "하위 답변을 생성하는 중입니다.",
+            "quality_check": "결과물 품질을 검증하고 있습니다.",
+            "synthesizer": "최종 답변을 종합 작성하고 있습니다."
+        }
+
+        try:
+            # LangGraph의 event stream 추출 (v2 이벤트 API 적용)
+            async for event in self.agent.astream_events(
+                input=initial_state,
+                config=config,
+                version="v2"
+            ):
+                event_type = event.get("event")
+                node_name = event.get("name")
+
+                # 노드/체인 시작 시점 이벤트 처리
+                if event_type == "on_chain_start" and node_name in target_nodes:
+                    yield {
+                        "event": "node_enter",
+                        "node": node_name,
+                        "session_id": session_id,
+                        "message": target_nodes[node_name]
+                    }
+
+                # 노드/체인 종료 시점 이벤트 처리 (필요시 사용)
+                elif event_type == "on_chain_end" and node_name in target_nodes:
+                    yield {
+                        "event": "node_exit",
+                        "node": node_name,
+                        "session_id": session_id,
+                        "message": f"[{node_name}] 단계 완료"
+                    }
+
+            # 전체 Graph 정상 완료 후 final state 조회 및 반환
+            final_state = await self.agent.aget_state(config)
+            yield {
+                "event": "final_result",
+                "session_id": session_id,
+                "response": final_state.values.get("final_answer", "")
+            }
+
+        except Exception as e:
+            self.logger.error(f"[STREAM ERROR] {traceback.format_exc()}")
+            yield {
+                "event": "error",
+                "session_id": session_id,
+                "message": f"처리 중 오류가 발생했습니다: {str(e)}"
+            }

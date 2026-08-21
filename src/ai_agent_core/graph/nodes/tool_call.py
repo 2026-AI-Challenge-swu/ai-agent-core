@@ -7,7 +7,7 @@ class ToolCallNode(BaseNode):
     user_path = "./prompts/tool_call.user.md"
 
 
-    def __call__(self, state: WorkerState) -> dict:
+    async def __call__(self, state: WorkerState) -> dict:
         if state["intent"] == "reject":
             return state
 

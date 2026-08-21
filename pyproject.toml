@@ -31,6 +31,8 @@ dependencies = [
     "structlog>=24.4.0",
     "opentelemetry-sdk>=1.28.0",
     "opentelemetry-instrumentation-fastapi>=0.49b0",
+    # --- sse ---
+    "sse-starlette",
 ]
 
 [dependency-groups]

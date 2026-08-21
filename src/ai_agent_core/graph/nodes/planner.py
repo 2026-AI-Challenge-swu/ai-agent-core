@@ -7,7 +7,7 @@ class PlannerNode(BaseNode):
     user_path = "./prompts/planner.user.md"
 
 
-    def __call__(self, state: WorkerState) -> dict:
+    async def __call__(self, state: WorkerState) -> dict:
         if state["intent"] == "reject":
             return state
 

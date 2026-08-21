@@ -7,7 +7,7 @@ class QualityCheckNode(BaseNode):
     user_path = "./prompts/quality_check.user.md"
 
 
-    def __call__(self, state: AgentState) -> dict:
+    async def __call__(self, state: AgentState) -> dict:
         return {
             "quality_score": 1.0,
             "quality_feedback": ""
