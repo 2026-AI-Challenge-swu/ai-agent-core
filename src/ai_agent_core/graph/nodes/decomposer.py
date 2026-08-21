@@ -1,11 +1,11 @@
 from src.ai_agent_core.graph.state import AgentState
+from src.ai_agent_core.graph.nodes.base import BaseNode
 
 
+class DecomposerNode(BaseNode):
+    system_path = "./prompts/decomposer.system.md"
+    user_path = "./prompts/decomposer.user.md"
 
-class DecomposerNode:
-    def __init__(self, app_state):
-        self.logger = app_state.logger
-        self.llm = app_state.llm
 
     def __call__(self, state: AgentState) -> dict:
         query = state["query"]

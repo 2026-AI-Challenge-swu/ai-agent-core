@@ -14,12 +14,19 @@ async def chat(
     body: ChatRequest,
 ):
     logger = request.app.state.logger
+    agent = request.app.state.agent
+
     session_id = body.session_id
     query = body.query
     logger.info("호출 완료")
 
+    response = agent.run(
+        query=query,
+        session_id=session_id
+    )
+
     return {
         "session_id": session_id,
         "query": query,
-        "response": ""
+        "response": response
     }

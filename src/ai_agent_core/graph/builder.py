@@ -1,7 +1,7 @@
 import traceback
 from functools import partial
 
-from langgraph.graph import StateGraph, END, Graph
+from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 
 from src.ai_agent_core.graph.state import AgentState
@@ -49,7 +49,7 @@ class AgentGraphBuilder:
         feedback = state["quality_feedback"]
 
         if score >= 0.8:
-            return "final"
+            return "synthesizer"
 
         if "근거" in feedback or "정보 부족" in feedback:
             return "retry_plan"
@@ -76,7 +76,7 @@ class AgentGraphBuilder:
         return wrapper
 
 
-    def _build_graph(self) -> Graph:
+    def _build_graph(self) -> StateGraph:
         """
         LangGraph 빌드(주요 함수는 /node 에서 정의)
         """
@@ -144,7 +144,7 @@ class AgentGraphBuilder:
             "quality_check",
             self._route_quality,
             {
-                "final": "final_response",
+                "synthesizer": "synthesizer",
                 "retry_plan": "planner",
                 "retry_answer": "generate_answer",
             },
@@ -166,6 +166,6 @@ class AgentGraphBuilder:
         }
 
         return self.agent.invoke(
-            initial_state=initial_state,
+            input=initial_state,
             config=config
             )
