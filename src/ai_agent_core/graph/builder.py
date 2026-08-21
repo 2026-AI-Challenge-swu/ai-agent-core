@@ -168,6 +168,7 @@ class AgentGraphBuilder:
                 "worker",
                 {
                     "sub_query": item["sub_query"],
+                    "intent": item["intent"],
                     "sub_query_id": item["sub_query_id"],
                     "worker_results": [],
                 },

@@ -1,6 +1,5 @@
 from src.ai_agent_core.graph.state import WorkerState
 from src.ai_agent_core.graph.nodes.base import BaseNode
-from ai_common.utils.io import parse_str_to_json
 
 
 class PlannerNode(BaseNode):
@@ -9,6 +8,9 @@ class PlannerNode(BaseNode):
 
 
     def __call__(self, state: WorkerState) -> dict:
+        if state["intent"] == "reject":
+            return state
+
         user_input = {
             "sub_query": state["sub_query"]
         }
@@ -20,13 +22,6 @@ class PlannerNode(BaseNode):
             "system_prompt": system_prompt,
             "user_prompt": user_prompt,
         }
-
-        def get_dict_from_llm(input):
-            raw_text = self.llm.call_gpt(**input)
-            result = parse_str_to_json(raw_text)
-
-
-            return result
 
 
         def validate_format(result):
@@ -58,7 +53,7 @@ class PlannerNode(BaseNode):
 
         plan = self._retry_invoke(
             input=input,
-            execute_fn=get_dict_from_llm,
+            execute_fn=self._get_dict_from_llm,
             valid_fn=validate_format
         )
         return {

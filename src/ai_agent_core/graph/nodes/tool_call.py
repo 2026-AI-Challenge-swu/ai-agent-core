@@ -1,4 +1,4 @@
-from src.ai_agent_core.graph.state import AgentState
+from src.ai_agent_core.graph.state import WorkerState
 from src.ai_agent_core.graph.nodes.base import BaseNode
 
 
@@ -7,9 +7,11 @@ class ToolCallNode(BaseNode):
     user_path = "./prompts/tool_call.user.md"
 
 
-    def __call__(self, state: AgentState) -> dict:
-        plan = state["plan"]
+    def __call__(self, state: WorkerState) -> dict:
+        if state["intent"] == "reject":
+            return state
 
+        plan = state["plan"]
         tool_results = []
 
         return {

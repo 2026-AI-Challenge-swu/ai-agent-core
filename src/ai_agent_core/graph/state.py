@@ -17,8 +17,8 @@ class AgentState(TypedDict, total=False):
 
 
 class WorkerState(TypedDict, total=False):
-    # 하나의 세부 질문
     sub_query: str
+    intent: str
 
     # 몇 번째 sub-query인지
     sub_query_id: int
