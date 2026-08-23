@@ -7,21 +7,35 @@ class GenerateAnswerNode(BaseNode):
     user_path = "./prompts/generate_answer.user.md"
 
 
+    def _format_rag_context(self, context_items):
+        if not context_items:
+            return "  (검색된 관련 문서 없음)"
+
+        lines = []
+        for item in context_items:
+            lines.append(
+                f"  - [{item['source']} p.{item['page']} / {item['category']} "
+                f"/ score={item['rerank_score']:.3f}] {item['text']}"
+            )
+        return "\n".join(lines)
+
     def _build_tool_result_text(self, tool_result):
         tool_result_text = []
         if tool_result:
             tool_result_text.append("- tool 실행 결과:")
-            if tool_result["tool_name"] == "search_pension_rag":
-                pass
-            elif tool_result["tool_name"] == "search_pension_rag":
-                pass
-            elif tool_result["tool_name"] == "calculate_tax_credit":
-                pass
-            elif tool_result["tool_name"] == "ask_user_for_info":
-                tool_result_text.append("주어진 정보가 부족하여 질문을 해결하기 위한 작업을 할 수 없습니다.")
-                tool_result_text.append(tool_result["result"])
+            for step_result in tool_result.values():
+                tool_name = step_result.get("tool_name")
+                result = step_result.get("result")
 
-        return "".join(tool_result_text)
+                if tool_name == "search_pension_rag":
+                    tool_result_text.append(self._format_rag_context(result))
+                elif tool_name == "calculate_tax_credit":
+                    pass
+                elif tool_name == "ask_user_for_info":
+                    tool_result_text.append("주어진 정보가 부족하여 질문을 해결하기 위한 작업을 할 수 없습니다.")
+                    tool_result_text.append(str(result))
+
+        return "\n".join(tool_result_text)
         
 
 
