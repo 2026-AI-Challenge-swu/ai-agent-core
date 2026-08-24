@@ -9,20 +9,29 @@ router = APIRouter(
 )
 
 
-@router.post("/default")
-async def chat(
+@router.post("")
+async def report(
     request: Request,
     body: ReportRequest,
 ):
     logger = request.app.state.logger
-    # agent = request.app.state.agent
+    agent = request.app.state.agent
 
-    context = body.context
+    userProfile = body.userProfile
+    portfolio = body.portfolio
+    retirementPlan = body.retirementPlan
+    metrics = body.metrics
     logger.info("호출 완료")
 
-    # response = await agent.run(
-    #     context=context,
-    # )
+    response = await agent.run(
+        userProfile=userProfile,
+        portfolio=portfolio,
+        retirementPlan=retirementPlan,
+        metrics=metrics,
+        mode="report",
+    )
+
+    print(response)
 
     return {
         "total_comment": "response",

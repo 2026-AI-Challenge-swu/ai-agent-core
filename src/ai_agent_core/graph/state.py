@@ -10,9 +10,7 @@ class UserProfile(TypedDict):
     nickname: str
     officialName: str
     description: str
-    portfolio: any
-    retirementPlan: any
-    metrics: any
+    
 
 
 class AgentState(TypedDict, total=False):
@@ -23,6 +21,9 @@ class AgentState(TypedDict, total=False):
     session_id: str
     query: str
     userProfile: UserProfile | None
+    portfolio: any
+    retirementPlan: any
+    metrics: any
 
     sub_queries: list[dict]
 
@@ -38,7 +39,7 @@ class WorkerState(TypedDict, total=False):
     """
     decomposer 이후 병렬 처리되는 worker state
     """
-    mode: str
+    sub_mode: str
     sub_query: str
     intent: str
 

@@ -1,16 +1,9 @@
 from src.ai_agent_core.graph.state import AgentState
 from src.ai_agent_core.graph.nodes.base import BaseNode
+from ai_common.utils.build_text import build_portfolio_text, build_retirementPlan_text, build_metrics_text
 
 
 class DecomposerNode(BaseNode):
-    def _build_retirementPlan_text(self, retirementPlan):
-        pass
-
-
-    def _build_metrics_text(self, metrics):
-        pass
-    
-
     async def __call__(self, state: AgentState) -> dict:
         if state['mode'] == "chat":
             user_input = {
@@ -19,15 +12,15 @@ class DecomposerNode(BaseNode):
 
         else:
             user_input = {
-                "totalScore": state["userProfile"]["totalScore"],
-                "type": state["userProfile"]["type"],
-                "grade": state["userProfile"]["grade"],
-                "nickname": state["userProfile"]["nickname"],
-                "officialName": state["userProfile"]["officialName"],
-                "description": state["userProfile"]["description"],
-                "portfolio": state["userProfile"]["portfolio"],
-                "retirementPlan": self._build_retirementPlan_text(state["userProfile"]["retirementPlan"]),
-                "metrics": self._build_metrics_text(state["userProfile"]["metrics"]),
+                "totalScore": state["userProfile"].totalScore,
+                "type": state["userProfile"].type,
+                "grade": state["userProfile"].grade,
+                "nickname": state["userProfile"].nickname,
+                "officialName": state["userProfile"].officialName,
+                "description": state["userProfile"].description,
+                "portfolio": build_portfolio_text(state["portfolio"]),
+                "retirementPlan": build_retirementPlan_text(state["retirementPlan"]),
+                "metrics": build_metrics_text(state["metrics"]),
             }
 
         system_path = f"./prompts/decomposer.{state['mode']}.system.md"

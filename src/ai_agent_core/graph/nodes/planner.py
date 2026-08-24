@@ -15,8 +15,8 @@ class PlannerNode(BaseNode):
             "sub_query": state["sub_query"]
         }
 
-        system_path = f"./prompts/planner.{state['mode']}.system.md"
-        user_path = f"./prompts/planner.{state['mode']}.user.md"
+        system_path = f"./prompts/planner.{state['sub_mode']}.system.md"
+        user_path = f"./prompts/planner.{state['sub_mode']}.user.md"
 
         system_prompt = self.llm.get_prompt(system_path)
         user_prompt = self.llm.get_prompt(user_path, **user_input)

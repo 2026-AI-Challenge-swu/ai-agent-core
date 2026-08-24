@@ -1,6 +1,6 @@
 from src.ai_agent_core.graph.state import AgentState
 from src.ai_agent_core.graph.nodes.base import BaseNode
-
+from ai_common.utils.build_text import build_portfolio_text, build_retirementPlan_text, build_metrics_text
 
 class SynthesizerNode(BaseNode):
     def _build_sub_qa_text(self, worker_results):
@@ -13,10 +13,25 @@ class SynthesizerNode(BaseNode):
         return " ".join(sub_qa_text)
 
     async def __call__(self, state: AgentState) -> dict:
-        user_input = {
-            "query": state["query"],
-            "sub_qa_text": self._build_sub_qa_text(state["worker_results"])
-        }
+        if state['mode'] == "chat":
+            user_input = {
+                "query": state["query"],
+                "sub_qa_text": self._build_sub_qa_text(state["worker_results"])
+            }
+
+        else:
+            user_input = {
+                "totalScore": state["userProfile"].totalScore,
+                "type": state["userProfile"].type,
+                "grade": state["userProfile"].grade,
+                "nickname": state["userProfile"].nickname,
+                "officialName": state["userProfile"].officialName,
+                "description": state["userProfile"].description,
+                "portfolio": build_portfolio_text(state["portfolio"]),
+                "retirementPlan": build_retirementPlan_text(state["retirementPlan"]),
+                "metrics": build_metrics_text(state["metrics"]),
+                "sub_qa_text": self._build_sub_qa_text(state["worker_results"])
+            }
 
         system_path = f"./prompts/synthesizer.{state['mode']}.system.md"
         user_path = f"./prompts/synthesizer.{state['mode']}.user.md"

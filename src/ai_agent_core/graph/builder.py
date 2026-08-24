@@ -45,6 +45,9 @@ class AgentGraphBuilder:
         query: str,
         session_id: str,
         userProfile: any,
+        portfolio: any,
+        retirementPlan: any,
+        metrics: any,
         mode: str
     ) -> AgentState:
         """
@@ -61,6 +64,9 @@ class AgentGraphBuilder:
             quality_feedback="",
             final_answer="",
             userProfile=userProfile,
+            portfolio=portfolio,
+            retirementPlan=retirementPlan,
+            metrics=metrics,
         )
 
     # =========================================================
@@ -182,7 +188,7 @@ class AgentGraphBuilder:
             Send(
                 "worker",
                 {   
-                    "mode": state["mode"],
+                    "sub_mode": state["mode"],
                     "sub_query": item["sub_query"],
                     "intent": item["intent"],
                     "sub_query_id": item["sub_query_id"],
@@ -329,6 +335,9 @@ class AgentGraphBuilder:
         query: str = "",
         session_id: str = "",
         userProfile: any = None,
+        portfolio: any = None,
+        retirementPlan: any = None,
+        metrics: any = None,
         mode: str = "chat"
     ) -> dict:
 
@@ -336,6 +345,9 @@ class AgentGraphBuilder:
             query=query,
             session_id=session_id,
             userProfile=userProfile,
+            portfolio=portfolio,
+            retirementPlan=retirementPlan,
+            metrics=metrics,
             mode=mode,
         )
 
