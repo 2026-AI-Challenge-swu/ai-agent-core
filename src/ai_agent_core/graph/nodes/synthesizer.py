@@ -3,9 +3,6 @@ from src.ai_agent_core.graph.nodes.base import BaseNode
 
 
 class SynthesizerNode(BaseNode):
-    system_path = "./prompts/synthesizer.system.md"
-    user_path = "./prompts/synthesizer.user.md"
-
     def _build_sub_qa_text(self, worker_results):
         sub_qa_text = []
         if worker_results:
@@ -21,8 +18,11 @@ class SynthesizerNode(BaseNode):
             "sub_qa_text": self._build_sub_qa_text(state["worker_results"])
         }
 
-        system_prompt = self.llm.get_prompt(self.system_path)
-        user_prompt = self.llm.get_prompt(self.user_path, **user_input)
+        system_path = f"./prompts/synthesizer.{state['mode']}.system.md"
+        user_path = f"./prompts/synthesizer.{state['mode']}.user.md"
+
+        system_prompt = self.llm.get_prompt(system_path)
+        user_prompt = self.llm.get_prompt(user_path, **user_input)
 
         input = {
             "system_prompt": system_prompt,

@@ -34,9 +34,51 @@ uv run python -m src.ai_agent_core.main
 > ```
 ## 구현 예정
 ### POST `/api/v1/report`
+> 리포트에 필요한 내용을 생성합니다.
 > ```
 > @request
 > {
->   "context": "string"
+>    "userProfile": {
+>    "totalScore": 85,
+>    "type": str,
+>    "grade": 3,
+>    "nickname": str,
+>    "officialName": str,
+>    "description": str,
+>    "portfolio": [
+>      {
+>        "category": str,
+>        "weightPercent": int
+>      },
+>      {
+>        "category": str,
+>        "weightPercent": int
+>      },
+>      {
+>        "category": str,
+>        "weightPercent": int
+>      },
+>      {
+>        "category": str,
+>        "weightPercent": int
+>      }
+>    ],
+>    "retirementPlan": {
+>      "monthlyContribution": int,
+>      "currentAge": int,
+>      "targetAge": int,
+>      "expectedReturnRate": int,
+>      "totalContribution": int,
+>      "expectedProfit": int,
+>      "taxBenefit": int,
+>      "expectedAssetAtRetirement": int
+>    },
+>    "metrics": {
+>      "annualTaxBenefit": int,
+>      "assetAt65": int,
+>      "assetIncreaseAfter20Years": int,
+>       "cumulativeTaxBenefit": int
+>     }
+>   }
 > }
 > ```

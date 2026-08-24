@@ -44,6 +44,8 @@ class AgentGraphBuilder:
         self,
         query: str,
         session_id: str,
+        userProfile: any,
+        mode: str
     ) -> AgentState:
         """
         graph invoke 전 state 초기화
@@ -52,11 +54,13 @@ class AgentGraphBuilder:
         return AgentState(
             query=query,
             session_id=session_id,
+            mode=mode,
             sub_queries=[],
             worker_results=[],
             quality_score=0.0,
             quality_feedback="",
             final_answer="",
+            userProfile=userProfile,
         )
 
     # =========================================================
@@ -177,7 +181,8 @@ class AgentGraphBuilder:
         return [
             Send(
                 "worker",
-                {
+                {   
+                    "mode": state["mode"],
                     "sub_query": item["sub_query"],
                     "intent": item["intent"],
                     "sub_query_id": item["sub_query_id"],
@@ -321,13 +326,17 @@ class AgentGraphBuilder:
 
     async def run(
         self,
-        query: str,
-        session_id: str,
+        query: str = "",
+        session_id: str = "",
+        userProfile: any = None,
+        mode: str = "chat"
     ) -> dict:
 
         initial_state = self._set_initial_state(
             query=query,
             session_id=session_id,
+            userProfile=userProfile,
+            mode=mode,
         )
 
         config = {
@@ -346,6 +355,7 @@ class AgentGraphBuilder:
         self,
         query: str,
         session_id: str,
+        mode: str = "chat",
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         SSE 전송을 위한 비동기 제너레이터
@@ -354,6 +364,7 @@ class AgentGraphBuilder:
         initial_state = self._set_initial_state(
             query=query,
             session_id=session_id,
+            mode=mode,
         )
 
         config = {

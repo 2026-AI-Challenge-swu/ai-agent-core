@@ -3,17 +3,38 @@ from src.ai_agent_core.graph.nodes.base import BaseNode
 
 
 class DecomposerNode(BaseNode):
-    system_path = "./prompts/decomposer.system.md"
-    user_path = "./prompts/decomposer.user.md"
+    def _build_retirementPlan_text(self, retirementPlan):
+        pass
 
+
+    def _build_metrics_text(self, metrics):
+        pass
+    
 
     async def __call__(self, state: AgentState) -> dict:
-        user_input = {
-            "query": state["query"]
-        }
+        if state['mode'] == "chat":
+            user_input = {
+                "query": state["query"]
+            }
 
-        system_prompt = self.llm.get_prompt(self.system_path)
-        user_prompt = self.llm.get_prompt(self.user_path, **user_input)
+        else:
+            user_input = {
+                "totalScore": state["userProfile"]["totalScore"],
+                "type": state["userProfile"]["type"],
+                "grade": state["userProfile"]["grade"],
+                "nickname": state["userProfile"]["nickname"],
+                "officialName": state["userProfile"]["officialName"],
+                "description": state["userProfile"]["description"],
+                "portfolio": state["userProfile"]["portfolio"],
+                "retirementPlan": self._build_retirementPlan_text(state["userProfile"]["retirementPlan"]),
+                "metrics": self._build_metrics_text(state["userProfile"]["metrics"]),
+            }
+
+        system_path = f"./prompts/decomposer.{state['mode']}.system.md"
+        user_path = f"./prompts/decomposer.{state['mode']}.user.md"
+
+        system_prompt = self.llm.get_prompt(system_path)
+        user_prompt = self.llm.get_prompt(user_path, **user_input)
 
         input = {
             "system_prompt": system_prompt,

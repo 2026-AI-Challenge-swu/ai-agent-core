@@ -2,12 +2,27 @@ from typing import Annotated, TypedDict
 import operator
 
 
+
+class UserProfile(TypedDict):
+    totalScore: int
+    type: str
+    grade: int
+    nickname: str
+    officialName: str
+    description: str
+    portfolio: any
+    retirementPlan: any
+    metrics: any
+
+
 class AgentState(TypedDict, total=False):
     """
     Main State
     """
+    mode: str
     session_id: str
     query: str
+    userProfile: UserProfile | None
 
     sub_queries: list[dict]
 
@@ -23,6 +38,7 @@ class WorkerState(TypedDict, total=False):
     """
     decomposer 이후 병렬 처리되는 worker state
     """
+    mode: str
     sub_query: str
     intent: str
 

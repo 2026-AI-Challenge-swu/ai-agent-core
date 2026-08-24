@@ -6,10 +6,6 @@ from src.ai_agent_core.tools.registry import tool_registry
 
 
 class ToolCallNode(BaseNode):
-    system_path = "./prompts/tool_call.system.md"
-    user_path = "./prompts/tool_call.user.md"
-
-
     def __init__(self, app_state):
         super().__init__(app_state)
         self.tool_registry = tool_registry
