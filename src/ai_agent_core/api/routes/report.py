@@ -25,6 +25,15 @@ async def chat(
     # )
 
     return {
-        "response": "response"
+        "total_comment": "response",
+        "road_map": [{
+            "id": 0, 
+            "time": "", 
+            "todo": ""
+            }],
+        "counselling_points": [{
+            "tendency": "", 
+            "detail": ""
+            }],
     }
 
