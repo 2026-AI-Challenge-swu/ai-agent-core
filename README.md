@@ -25,7 +25,7 @@ uv run python -m src.ai_agent_core.main
 > ```
 ### POST `/api/v1/chat/sse`
 > SSE 채팅 api이며 답하는 과정이 스트리밍으로 반환됩니다.
-> > ```
+> ```
 > @request
 > {
 >   "session_id": "string", # 보고서 아이디
