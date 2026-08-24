@@ -45,16 +45,41 @@ class SynthesizerNode(BaseNode):
             "max_output_tokens": 2048
         }
 
+
+        if state['mode'] == "chat":
+            execute_fn = lambda kwargs: self.llm.call_gpt(**kwargs)
+        else:
+            execute_fn = self._get_dict_from_llm
+
+
         def validate_format(result):
-            if result:
+            if isinstance(result, str):
                 return True
             
-            return False
+            if not isinstance(result["total_comment"], str):
+                return False
+
+            if not isinstance(result["road_map"], list) \
+                or not isinstance(result["counselling_points"], list):
+                return False
+
+            for i in result["road_map"]:
+                if not isinstance(i.get("id"), int)\
+                    or not isinstance(i.get("time"), str)\
+                    or not isinstance(i.get("todo"), str):
+                    return False
+
+            for i in result["counselling_points"]:
+                if not isinstance(i.get("tendency"), str)\
+                    or not isinstance(i.get("detail"), str):
+                    return False
+            
+            return True
 
         
         final_answer = self._retry_invoke(
             input=input,
-            execute_fn=lambda kwargs: self.llm.call_gpt(**kwargs),
+            execute_fn=execute_fn,
             valid_fn=validate_format
         )
 

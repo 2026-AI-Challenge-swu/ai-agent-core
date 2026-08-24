@@ -31,18 +31,5 @@ async def report(
         mode="report",
     )
 
-    print(response)
-
-    return {
-        "total_comment": "response",
-        "road_map": [{
-            "id": 0, 
-            "time": "", 
-            "todo": ""
-            }],
-        "counselling_points": [{
-            "tendency": "", 
-            "detail": ""
-            }],
-    }
+    return response["final_answer"]
 

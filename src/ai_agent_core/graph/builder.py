@@ -34,7 +34,8 @@ class AgentGraphBuilder:
         self.worker = self._build_worker_graph()
 
         # Main graph
-        self.agent = self._build_graph()
+        self.chat_agent = self._build_graph(mode="chat")
+        self.report_agent = self._build_graph(mode="report")
 
     # =========================================================
     # Initial State
@@ -234,7 +235,7 @@ class AgentGraphBuilder:
     # Main Graph
     # =========================================================
 
-    def _build_graph(self):
+    def _build_graph(self, mode: str = "chat"):
         """
         메인 graph 빌드
         노드 엣지 연결
@@ -322,9 +323,14 @@ class AgentGraphBuilder:
             END,
         )
 
-        return workflow.compile(
-            checkpointer=self.checkpointer,
-        )
+        if mode == "chat":
+            return workflow.compile(
+                checkpointer=self.checkpointer,
+            )
+        else:
+            return workflow.compile()
+
+
 
     # =========================================================
     # Public
@@ -351,17 +357,20 @@ class AgentGraphBuilder:
             mode=mode,
         )
 
-        config = {
-            "configurable": {
-                "thread_id": session_id,
-            }
-        }
+        if mode == "chat":
+            return await self.chat_agent.ainvoke(
+                input=initial_state,
+                config={
+                    "configurable": {
+                        "thread_id": session_id,
+                    }
+                },
+            )
 
-        return await self.agent.ainvoke(
-            input=initial_state,
-            config=config,
-        )
-
+        else:
+            return await self.report_agent.ainvoke(
+                input=initial_state,
+            )
 
     async def stream_run(
         self,
@@ -397,7 +406,7 @@ class AgentGraphBuilder:
 
         try:
             # LangGraph의 event stream 추출 (v2 이벤트 API 적용)
-            async for event in self.agent.astream_events(
+            async for event in self.chat_agent.astream_events(
                 input=initial_state,
                 config=config,
                 version="v2"
@@ -424,7 +433,7 @@ class AgentGraphBuilder:
                     }
 
             # 전체 Graph 정상 완료 후 final state 조회 및 반환
-            final_state = await self.agent.aget_state(config)
+            final_state = await self.chat_agent.aget_state(config)
             yield {
                 "event": "final_result",
                 "session_id": session_id,

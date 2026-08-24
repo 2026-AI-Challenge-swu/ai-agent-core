@@ -32,7 +32,7 @@ class AgentState(TypedDict, total=False):
     quality_score: float | None
     quality_feedback: str | None
 
-    final_answer: str | None
+    final_answer: any
 
 
 class WorkerState(TypedDict, total=False):
