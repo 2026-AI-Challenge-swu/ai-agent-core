@@ -12,3 +12,31 @@ uv sync
 ```
 uv run python -m src.ai_agent_core.main
 ```
+# API
+## 구현 완료
+### POST `/api/v1/chat/default`
+> 일반적인 채팅 api이며 바로 답이 나옵니다(답하는 과정이 스트리밍으로 나오지 않습니다)
+> ```
+> @request
+> {
+>   "session_id": "string", # 보고서 아이디
+>   "query": "string"
+> }
+> ```
+### POST `/api/v1/chat/sse`
+> SSE 채팅 api이며 답하는 과정이 스트리밍으로 반환됩니다.
+> > ```
+> @request
+> {
+>   "session_id": "string", # 보고서 아이디
+>   "query": "string"
+> }
+> ```
+## 구현 예정
+### POST `/api/v1/report`
+> ```
+> @request
+> {
+>   "context": "string"
+> }
+> ```
