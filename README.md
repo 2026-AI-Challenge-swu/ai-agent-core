@@ -19,8 +19,8 @@ uv run python -m src.ai_agent_core.main
 > ```
 > @request
 > {
->   "session_id": "string", # 보고서 아이디
->   "query": "string"
+>   "session_id": str, # 보고서 아이디
+>   "query": str
 > }
 > ```
 ### POST `/api/v1/chat/sse`
@@ -28,8 +28,8 @@ uv run python -m src.ai_agent_core.main
 > ```
 > @request
 > {
->   "session_id": "string", # 보고서 아이디
->   "query": "string"
+>   "session_id": str, # 보고서 아이디
+>   "query": str
 > }
 > ```
 ## 구현 예정
@@ -39,9 +39,9 @@ uv run python -m src.ai_agent_core.main
 > @request
 > {
 >    "userProfile": {
->    "totalScore": 85,
+>    "totalScore": int,
 >    "type": str,
->    "grade": 3,
+>    "grade": int,
 >    "nickname": str,
 >    "officialName": str,
 >    "description": str,
