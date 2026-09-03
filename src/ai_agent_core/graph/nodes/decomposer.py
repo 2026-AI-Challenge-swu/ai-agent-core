@@ -49,7 +49,7 @@ class DecomposerNode(BaseNode):
 
 
                 
-        sub_queries = self._retry_invoke(
+        sub_queries = await self._retry_invoke(
             input=input,
             execute_fn=self._get_dict_from_llm,
             valid_fn=validate_format
