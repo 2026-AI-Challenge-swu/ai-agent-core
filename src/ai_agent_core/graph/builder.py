@@ -45,11 +45,11 @@ class AgentGraphBuilder:
         self,
         query: str,
         session_id: str,
-        userProfile: any,
-        portfolio: any,
-        retirementPlan: any,
-        metrics: any,
-        mode: str
+        userProfile: any = None,
+        portfolio: any = None,
+        retirementPlan: any = None,
+        metrics: any = None,
+        mode: str = "chat"
     ) -> AgentState:
         """
         graph invoke 전 state 초기화
