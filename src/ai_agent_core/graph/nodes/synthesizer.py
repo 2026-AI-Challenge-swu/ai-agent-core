@@ -1,3 +1,4 @@
+import asyncio
 from src.ai_agent_core.graph.state import AgentState
 from src.ai_agent_core.graph.nodes.base import BaseNode
 from ai_common.utils.build_text import build_portfolio_text, build_retirementPlan_text, build_metrics_text
@@ -47,7 +48,10 @@ class SynthesizerNode(BaseNode):
 
 
         if state['mode'] == "chat":
-            execute_fn = lambda kwargs: self.llm.call_gpt(**kwargs)
+            # base.py의 _get_dict_from_llm과 동일한 이유로 to_thread로 감쌈 — chat 모드는
+            # JSON이 아니라 순수 텍스트를 그대로 반환해야 해서 파싱 없이 call_gpt만 호출.
+            async def execute_fn(kwargs):
+                return await asyncio.to_thread(self.llm.call_gpt, **kwargs)
         else:
             execute_fn = self._get_dict_from_llm
 
@@ -77,7 +81,7 @@ class SynthesizerNode(BaseNode):
             return True
 
         
-        final_answer = self._retry_invoke(
+        final_answer = await self._retry_invoke(
             input=input,
             execute_fn=execute_fn,
             valid_fn=validate_format

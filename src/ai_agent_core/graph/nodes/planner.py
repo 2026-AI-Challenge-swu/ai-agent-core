@@ -54,7 +54,7 @@ class PlannerNode(BaseNode):
 
             return True
 
-        plan = self._retry_invoke(
+        plan = await self._retry_invoke(
             input=input,
             execute_fn=self._get_dict_from_llm,
             valid_fn=validate_format
