@@ -7,7 +7,7 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_ex
 class RagClient:
     """ai-rag-engine의 /search API 호출 클라이언트"""
 
-    def __init__(self, base_url: str | None = None, timeout: float = 30.0):
+    def __init__(self, base_url: str | None = None, timeout: float = 60.0):
         self._base_url_override = base_url
         self.timeout = timeout
 
