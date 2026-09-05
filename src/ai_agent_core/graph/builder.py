@@ -445,5 +445,5 @@ class AgentGraphBuilder:
             yield {
                 "event": "error",
                 "session_id": session_id,
-                "message": f"처리 중 오류가 발생했습니다: {str(e)}"
+                "message": f"처리 중 오류가 발생했습니다: {e!r}"
             }
